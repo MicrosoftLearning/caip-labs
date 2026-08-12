@@ -1,0 +1,9 @@
+product_id,distribution_hub,on_hand_units,reorder_point_units,expected_weekly_sales,inbound_units
+P1001,Memphis,42,60,85,20
+P1002,Memphis,180,75,95,0
+P1003,Memphis,35,50,70,10
+P1004,Memphis,210,80,55,0
+P1005,Memphis,28,45,62,30
+P1006,Memphis,96,55,48,0
+P1007,Memphis,125,65,80,0
+P1008,Memphis,18,40,75,15

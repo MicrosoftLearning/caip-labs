@@ -1,0 +1,6 @@
+route_id,distribution_hub,destination_region,carrier,service_level,typical_transit_days
+R001,Memphis,Southeast,Northstar Freight,Ground,2
+R002,Memphis,Northeast,Contoso Logistics,Ground,3
+R003,Memphis,Midwest,Northstar Freight,Ground,2
+R004,Memphis,Southwest,Wide World Carriers,Ground,3
+R005,Memphis,West,Contoso Logistics,Expedited,3
