@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16.10
+    container_name: caldova-postgres
+    environment:
+      POSTGRES_DB: caldova_inventory
+      POSTGRES_USER: caldova
+      POSTGRES_PASSWORD: Caldova_Local_2026!
+    ports:
+      - "5433:5432"
+    volumes:
+      - caldova-postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caldova -d caldova_inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  caldova-postgres-data:
