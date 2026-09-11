@@ -1,25 +1,26 @@
 ---
 lab:
-    title: 'Modernize a .NET and SQL Server workload with GitHub Copilot'
-    description: 'Assess a legacy workload, make one bounded configuration improvement, validate the result, and prepare an Azure modernization recommendation.'
+    title: 'Lab 1: Modernize a .NET application and SQL Server database with GitHub Copilot and CLI'
+    description: 'Use GitHub Copilot in Visual Studio Code and from the command line to assess a legacy workload, make one bounded configuration improvement, validate the result, and prepare an Azure modernization recommendation.'
     level: 300
-    duration: 45
+    duration: 60
     islab: true
     primarytopics:
         - GitHub Copilot
+        - GitHub Copilot CLI
         - .NET
         - SQL Server
         - Azure application modernization
         - Azure SQL
 ---
 
-# Modernize a .NET and SQL Server workload with GitHub Copilot
+# Lab 1: Modernize a .NET application and SQL Server database with GitHub Copilot and CLI
 
 Caldova operates a business-critical ASP.NET Core inventory application backed by SQL Server. The application works, but it has technical debt, manual deployment assumptions, a framework dependency, and a database credential embedded in source code. You act as part of the Microsoft technical team preparing a focused modernization recommendation.
 
-In this exercise, you use GitHub Copilot to assess the workload, externalize the database connection string, verify inventory read and write operations, and recommend an Azure application runtime and SQL modernization target. Copilot accelerates the analysis and implementation, but you remain responsible for reviewing its claims and changes.
+In this exercise, you use GitHub Copilot in Visual Studio Code to assess and update the workload. You then use GitHub Copilot CLI to review the bounded change and run a build from the terminal. Finally, you verify inventory operations and recommend an Azure application runtime and SQL modernization target. Copilot accelerates the analysis and implementation, but you remain responsible for reviewing its commands, claims, and changes.
 
-This exercise should take approximately **45** minutes to complete.
+This exercise should take approximately **60** minutes to complete.
 
 ## Prerequisites
 
@@ -27,12 +28,14 @@ To complete this exercise, you need:
 
 - [Visual Studio Code](https://code.visualstudio.com/) installed.
 - Access to [GitHub Copilot](https://docs.github.com/copilot/get-started/what-is-github-copilot) with chat enabled, and a GitHub account signed in to Visual Studio Code.
+- Access to GitHub Copilot CLI through your GitHub Copilot plan and organization policies.
+- PowerShell 6 or later and WinGet for the Windows installation steps.
 - The [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running with Linux containers enabled.
 - [Git](https://git-scm.com/downloads) installed.
 - The files in this lab's `Labfiles/CaldovaInventory` folder.
 
-To keep the timed exercise to 45 minutes, download the `mcr.microsoft.com/mssql/server:2022-latest` container image before the session. The SQL Server Linux container requires an x86-64 host. Use a prepared x86-64 lab environment if your device has an Arm processor.
+To keep the timed exercise to 60 minutes, download the `mcr.microsoft.com/mssql/server:2022-latest` container image and install GitHub Copilot CLI before the session. The SQL Server Linux container requires an x86-64 host. Use a prepared x86-64 lab environment if your device has an Arm processor.
 
 > [!IMPORTANT]
 > The password in the starter files is a synthetic local-development credential. Never submit real credentials, customer code, customer data, or confidential information to a prompt unless your organization's policies permit it.
@@ -221,6 +224,71 @@ Supply local configuration through an environment variable, then build and compa
 
 The application now receives environment-specific database configuration without embedding a credential in C# source.
 
+## Review the change with GitHub Copilot CLI
+
+Use GitHub Copilot CLI as an independent review and validation surface. Keep the CLI scoped to the lab folder, review every requested tool action, and don't give it permission to edit files.
+
+> [!TIP]
+> Timebox this section to 15 minutes. Use the interactive CLI so that you can inspect each proposed command before you approve it.
+
+### Start and secure the CLI session
+
+1. In the integrated terminal, verify that GitHub Copilot CLI is installed by running:
+
+    ```powershell
+    copilot --version
+    ```
+
+1. If the command isn't found, install GitHub Copilot CLI by running:
+
+    ```powershell
+    winget install GitHub.Copilot
+    ```
+
+    Close and reopen the terminal after installation, and then run `copilot --version` again.
+
+1. Confirm that the terminal is open in the `Labfiles/CaldovaInventory` folder, and start an interactive session by running:
+
+    ```powershell
+    Remove-Item Env:ConnectionStrings__Inventory -ErrorAction SilentlyContinue
+    copilot
+    ```
+
+    Clearing the environment variable keeps the synthetic database credential out of the CLI process environment. The build doesn't require a database connection.
+
+1. When prompted to trust the folder, select the option to trust it for the current session. If you're prompted to authenticate, enter `/login` and follow the on-screen instructions.
+
+    > [!IMPORTANT]
+    > Copilot CLI can read, modify, and execute files in a trusted directory. Review each tool request and approve only the read operations and `dotnet build` command required by this section. Don't use `--allow-all-tools`, `/allow-all`, or `/yolo` in this lab.
+
+### Review and build the bounded change
+
+1. At the Copilot CLI prompt, enter:
+
+    ```prompt
+    Review @Program.cs and @appsettings.json against these acceptance criteria:
+    the Inventory connection string comes from ASP.NET Core configuration;
+    startup rejects a missing, empty, or whitespace value with a clear message;
+    appsettings.json contains no credential; and repositories, routes, packages,
+    and container settings remain unchanged. Do not edit files. Cite the file and
+    relevant code for every conclusion. Mark unsupported claims as assumptions.
+    ```
+
+1. Review and approve only the file-read requests needed for the assessment. Confirm that the response addresses every acceptance criterion and correct any unsupported claim.
+1. Enter the following prompt:
+
+    ```prompt
+    Run dotnet build without changing any files. Report whether the build succeeds,
+    including the error and warning counts. If it fails, explain the first actionable
+    error, but do not fix it.
+    ```
+
+1. When Copilot CLI requests permission to run `dotnet build`, review the exact command and approve that invocation only.
+1. Confirm that Copilot CLI reports a successful build with no errors. Enter `/usage` to view the session summary, and then enter `/exit` to close the session.
+1. Record the CLI review result, build result, and any difference from the Visual Studio Code review in `evidence/assessment-notes.md`.
+
+The CLI review provides a second, terminal-based check while keeping you in control of file access and command execution.
+
 ## Validate the change and collect evidence
 
 Run the application and verify the health and inventory read behavior observed in the baseline, then test the write path. This smoke test provides functional evidence, but it isn't a substitute for performance, security, and migration testing.
@@ -230,9 +298,10 @@ Run the application and verify the health and inventory read behavior observed i
 
 ### Test the API
 
-1. Start the application by running:
+1. Restore the local connection string, and then start the application by running:
 
     ```powershell
+    $env:ConnectionStrings__Inventory = "Server=localhost,14333;Database=CaldovaInventory;User Id=sa;Password=Caldova_Local_2026!;Encrypt=True;TrustServerCertificate=True"
     dotnet run
     ```
 
@@ -328,7 +397,7 @@ Select target services based on verified workload requirements rather than selec
 
 ## Summary
 
-In this exercise, you used GitHub Copilot to assess a .NET and SQL Server workload, verify findings against source files, externalize a database connection string, validate read and write behavior, and prepare an evidence-based Azure modernization recommendation.
+In this exercise, you used GitHub Copilot in Visual Studio Code and GitHub Copilot CLI to assess a .NET and SQL Server workload, verify findings against source files, externalize a database connection string, review and build the change from the terminal, validate read and write behavior, and prepare an evidence-based Azure modernization recommendation.
 
 You have successfully completed this exercise.
 
@@ -358,6 +427,8 @@ Remove the local SQL Server container, network, and database volume after you fi
 ## Additional resources
 
 - [Ask GitHub Copilot questions in your IDE](https://docs.github.com/copilot/using-github-copilot/copilot-chat/asking-github-copilot-questions-in-your-ide)
+- [Install GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
+- [Use GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli/use-copilot-cli/overview)
 - [.NET support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core)
 - [Choose an Azure compute service](https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree)
 - [Azure App Service overview](https://learn.microsoft.com/azure/app-service/overview)

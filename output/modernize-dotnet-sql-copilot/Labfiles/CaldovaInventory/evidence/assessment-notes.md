@@ -25,6 +25,8 @@
 | --- | --- | --- |
 | Credential removed from C# source | _Pass or fail_ | _Describe the reviewed diff._ |
 | Updated application builds | _Pass or fail_ | _Record the build result._ |
+| Copilot CLI review matches acceptance criteria | _Pass or fail_ | _Record the review result and any difference from the IDE review._ |
+| Copilot CLI build succeeds | _Pass or fail_ | _Record the reported error and warning counts._ |
 | Health endpoint responds | _Pass or fail_ | _Record the response._ |
 | Inventory read succeeds | _Pass or fail_ | _Record returned rows._ |
 | Inventory write succeeds | _Pass or fail_ | _Record the created item._ |
