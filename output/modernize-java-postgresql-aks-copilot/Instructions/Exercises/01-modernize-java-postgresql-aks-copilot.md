@@ -1,26 +1,27 @@
 ---
 lab:
-    title: 'Modernize a Java and PostgreSQL workload for AKS with GitHub Copilot'
-    description: 'Assess a Java workload, make one bounded configuration improvement, validate PostgreSQL behavior, review its AKS target pattern, and prepare a customer-ready recommendation.'
+    title: 'Lab 2: Modernize a Java application and an Oracle application with GitHub Copilot, PostgreSQL, and AKS'
+    description: 'Assess Java and Oracle application assets, make a bounded Java configuration improvement, validate an Oracle-to-PostgreSQL schema translation, review an AKS target pattern, and prepare a customer-ready recommendation.'
     level: 300
-    duration: 45
+    duration: 60
     islab: true
     primarytopics:
         - GitHub Copilot
         - Java
         - Spring Boot
+        - Oracle Database
         - PostgreSQL
         - Azure Kubernetes Service
         - Azure Database for PostgreSQL
 ---
 
-# Modernize a Java and PostgreSQL workload for AKS with GitHub Copilot
+# Lab 2: Modernize a Java application and an Oracle application with GitHub Copilot, PostgreSQL, and AKS
 
-Caldova operates a Java inventory application backed by PostgreSQL. The application works locally, but its database credential is stored in source control, and its cloud deployment assumptions require validation. Caldova wants to prepare the workload for cloud-native operations on Azure Kubernetes Service (AKS) and establish an AI-ready data direction.
+Caldova operates a Java inventory application backed by PostgreSQL and a legacy Oracle replenishment application. The Java application works locally, but its database credential is stored in source control, and its cloud deployment assumptions require validation. The Oracle application contains database objects and PL/SQL logic that must be assessed before migration. Caldova wants to consolidate the data tier on PostgreSQL, prepare the Java workload for cloud-native operations on Azure Kubernetes Service (AKS), and establish an AI-ready data direction.
 
-In this exercise, you act as part of the Microsoft technical team. You use GitHub Copilot to assess the Spring Boot codebase, externalize database configuration, validate PostgreSQL read and write behavior, review a prepared AKS workload pattern, and create an evidence-based customer recommendation. Copilot accelerates the work, but you remain responsible for validating its claims and edits.
+In this exercise, you act as part of the Microsoft technical team. You use GitHub Copilot to assess the Spring Boot codebase and extracted Oracle application artifacts, externalize database configuration, review and validate an Oracle-to-PostgreSQL translation, test PostgreSQL behavior, review a prepared AKS workload pattern, and create an evidence-based customer recommendation. Copilot accelerates the work, but you remain responsible for validating its claims and edits.
 
-This exercise should take approximately **45** minutes to complete.
+This exercise should take approximately **60** minutes to complete.
 
 ## Prerequisites
 
@@ -33,9 +34,11 @@ To complete this exercise, you need:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running with Linux containers enabled.
 - The files in this lab's `Labfiles/CaldovaInventoryJava` folder.
 
+You don't need an Oracle server. The `oracle-application` folder contains extracted DDL and PL/SQL artifacts from the legacy application. In a production migration, use the PostgreSQL extension for Visual Studio Code to discover the live Oracle schema, convert objects, validate them in a scratch database, and create review tasks for unresolved objects.
+
 To review the prepared Kubernetes manifests, install [`kubectl`](https://kubernetes.io/docs/tasks/tools/). To use the optional AKS deployment path, you also need the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli), an Azure subscription, access to a prepared AKS cluster, and a versioned application image in a registry that the cluster can pull from.
 
-To keep the timed exercise to 45 minutes, download the `postgres:16.10` container image and Maven dependencies before the session.
+To keep the timed exercise to 60 minutes, download the `postgres:16.10` container image and Maven dependencies before the session.
 
 > [!IMPORTANT]
 > The password in the starter files is a synthetic local-development credential. Never submit real credentials, customer code, customer data, or confidential information to a prompt unless your organization's policies permit it.
@@ -123,12 +126,13 @@ Run the application and verify its health and database read path before changing
     Confirm that the response lists three Caldova inventory items.
 
 1. Return to the application terminal, and press **Ctrl+C** to stop the application.
-1. Open `pom.xml`, `src/main/resources/application.properties`, `InventoryController.java`, `InventoryRepository.java`, `Dockerfile`, `compose.yaml`, `scripts/init.sql`, and `k8s/caldova-inventory.yaml`. Record these facts in `evidence/assessment-notes.md`:
+1. Open `pom.xml`, `src/main/resources/application.properties`, `InventoryController.java`, `InventoryRepository.java`, `Dockerfile`, `compose.yaml`, `scripts/init.sql`, `oracle-application/replenishment-schema.sql`, `oracle-application/replenishment-package.sql`, and `k8s/caldova-inventory.yaml`. Record these facts in `evidence/assessment-notes.md`:
 
     - The application purpose and API surface.
     - The Java and Spring Boot versions.
     - The location of the PostgreSQL connection settings.
     - The query and write patterns.
+    - The Oracle schema objects and PL/SQL entry point.
     - The local container and prepared AKS assumptions.
 
 You now have a working baseline and evidence you can use to verify Copilot's assessment.
@@ -138,18 +142,20 @@ You now have a working baseline and evidence you can use to verify Copilot's ass
 Use Ask mode to identify Java, PostgreSQL, container, and AKS modernization concerns without changing files. Treat each response as a hypothesis until the repository supports it.
 
 > [!TIP]
-> Timebox this section to 10 minutes. Record the three most important verified findings instead of every possible backlog item.
+> Timebox this section to eight minutes. Record the three most important verified findings instead of every possible backlog item.
 
 1. Select the **Chat** icon in Visual Studio Code, and select **Ask** from the mode picker.
 1. Enter this architecture assessment prompt:
 
     ```prompt
-    Analyze this workspace as a Java, PostgreSQL, and AKS modernization architect.
+    Analyze this workspace as a Java, Oracle, PostgreSQL, and AKS modernization
+    architect.
     Summarize the application architecture, request and data flow, Java and Spring
-    Boot versions, Maven dependencies, PostgreSQL touchpoints, connection handling,
-    schema assumptions, container readiness, and AKS deployment assumptions. Cite
-    the workspace file that supports each claim. Do not edit files. Mark anything
-    you cannot verify as an assumption or discovery question.
+    Boot versions, Maven dependencies, PostgreSQL touchpoints, Oracle schema and
+    PL/SQL dependencies, connection handling, data-type and object compatibility,
+    container readiness, and AKS deployment assumptions. Cite the workspace file
+    that supports each claim. Do not edit files. Mark anything you cannot verify
+    as an assumption or discovery question.
     ```
 
     Copilot should cite source and configuration files and separate facts from assumptions.
@@ -159,11 +165,12 @@ Use Ask mode to identify Java, PostgreSQL, container, and AKS modernization conc
 
     ```prompt
     From verified workspace evidence, identify modernization findings for the Java
-    application, PostgreSQL database, container image, and AKS pattern. Group each
-    finding as security, compatibility, reliability, operations, performance, or
-    maintainability. For each finding, provide evidence, risk, effort (small,
-    medium, or large), customer value, deployment dependency, and a safe next
-    action. Rank the top three blockers. Do not edit files or invent customer facts.
+    application, Oracle application, PostgreSQL database, container image, and AKS
+    pattern. Group each finding as security, compatibility, reliability, operations,
+    performance, or maintainability. For each finding, provide evidence, risk,
+    effort (small, medium, or large), customer value, deployment dependency, and a
+    safe next action. Rank the top three blockers. Do not edit files or invent
+    customer facts.
     ```
 
 1. Copy the three verified blockers and their evidence into `evidence/assessment-notes.md`.
@@ -177,7 +184,7 @@ The assessment now connects repository evidence to modernization risk, effort, c
 Make one bounded improvement by replacing the source-controlled database values with required environment placeholders. This change preserves data access while preparing the application for environment-specific configuration and a managed secret source.
 
 > [!TIP]
-> Timebox this section to 13 minutes. If Copilot doesn't produce a bounded change after one correction, use the reference file in `solution` and continue to validation.
+> Timebox this section to 10 minutes. If Copilot doesn't produce a bounded change after one correction, use the reference file in `solution` and continue to validation.
 
 ### Generate and review the change
 
@@ -246,12 +253,79 @@ Verify that the application fails clearly without deployment configuration, then
 
 The bounded change removes the database credential from tracked Spring configuration without redesigning the application.
 
+## Assess and translate the Oracle application
+
+Review the extracted Oracle application objects, identify migration incompatibilities, and validate a prepared PostgreSQL translation. This exercise represents a schema-conversion review, not a complete production data migration.
+
+> [!TIP]
+> Timebox this section to 15 minutes. Focus on the supplied table, sequence, trigger, and package instead of designing the full production migration.
+
+### Identify Oracle compatibility work
+
+1. Select **Ask** in Copilot Chat, and enter this assessment prompt:
+
+    ```prompt
+    Review oracle-application/replenishment-schema.sql and
+    oracle-application/replenishment-package.sql as source artifacts for an Oracle
+    to Azure Database for PostgreSQL migration. Do not edit files. Inventory the
+    tables, constraints, sequence, trigger, package, function, transaction behavior,
+    and exception behavior. Create a mapping table for Oracle NUMBER, VARCHAR2,
+    DATE, SYSDATE, sequence and trigger identity generation, package structure,
+    SELECT INTO, NVL, NO_DATA_FOUND, and COMMIT. For each item, classify the
+    conversion as direct, redesign, or validation required, and cite the source
+    line or object. Flag behavior that tests must preserve.
+    ```
+
+1. Verify that Copilot identifies these material differences:
+
+    - PostgreSQL doesn't support Oracle packages directly, so the routine needs a schema and function organization strategy.
+    - The sequence and insert trigger can become an identity column.
+    - Oracle `DATE` includes date and time but no time-zone offset, so the target timestamp type requires a business decision.
+    - `NUMBER` precision, empty-string and `NULL` behavior, exception handling, transaction boundaries, and case-insensitive lookup require explicit validation.
+
+1. Record the compatibility findings and preserved behaviors in the **Oracle application conversion** table in `evidence/assessment-notes.md`.
+
+### Review and execute the PostgreSQL translation
+
+1. Open `solution/oracle-postgresql/replenishment.sql` alongside the two Oracle source files.
+1. Select **Ask** in Copilot Chat, and enter this review prompt:
+
+    ```prompt
+    Compare the Oracle source files in oracle-application with
+    solution/oracle-postgresql/replenishment.sql. Do not edit files. Trace every
+    PostgreSQL table, constraint, identity, data type, default, seed row, schema,
+    and function back to the Oracle behavior it replaces. Identify semantic changes,
+    missing tests, and any unsafe assumption. Pay special attention to timestamp
+    semantics, integer range, active status, case-insensitive SKU matching, null
+    input, missing rows, and transaction ownership. Treat generated code as
+    untrusted until the executable checks pass.
+    ```
+
+1. Apply the prepared translation to the local PostgreSQL database by running:
+
+    ```powershell
+    Get-Content -Raw solution/oracle-postgresql/replenishment.sql | docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U caldova -d caldova_inventory
+    ```
+
+1. Verify representative function behavior by running:
+
+    ```powershell
+    docker compose exec -T postgres psql -U caldova -d caldova_inventory -c "SELECT replenishment.recommended_order_quantity('CAL-100', 12) AS known_sku, replenishment.recommended_order_quantity('CAL-100', 40) AS overstocked_sku, replenishment.recommended_order_quantity('UNKNOWN', 5) AS unknown_sku;"
+    ```
+
+    Confirm that the results are `18`, `0`, and `0`. These checks validate representative behavior, but they don't prove production equivalence.
+
+1. Record the execution result, expected behavior, semantic differences, and remaining test gaps in `evidence/assessment-notes.md`.
+1. Add discovery questions for Oracle version, schema size, unsupported objects, character set, large objects, database links, scheduler jobs, workload profile, outage tolerance, and reconciliation requirements.
+
+For a live migration, use the Oracle-to-PostgreSQL schema conversion workflow in the PostgreSQL extension. Align the scratch database and production target major versions, review unsupported objects before conversion, independently validate generated objects, and resolve every review task before deployment.
+
 ## Validate PostgreSQL behavior and AI readiness
 
 Run a smoke test for health, read, and write behavior. Then use database evidence to define an AI-readiness next step without claiming that the current schema already supports vector search.
 
 > [!TIP]
-> Timebox this section to eight minutes.
+> Timebox this section to seven minutes.
 
 ### Test application and database behavior
 
@@ -326,7 +400,7 @@ The evidence confirms the core transaction path and defines AI readiness as a me
 Review the prepared workload manifests for identity, configuration, secrets, scaling, observability, and rollback. The standard path is a design review. Use the optional deployment steps only when a prepared AKS environment and image are available.
 
 > [!TIP]
-> Timebox this section to seven minutes.
+> Timebox this section to 10 minutes.
 
 ### Validate and assess the manifests
 
@@ -400,34 +474,36 @@ The AKS review now distinguishes controls already represented in the manifests f
 Convert the verified evidence into a concise modernization recommendation. Keep unknown customer requirements as discovery questions.
 
 > [!TIP]
-> Timebox this section to two minutes by using the supplied brief template.
+> Timebox this section to five minutes by using the supplied brief template.
 
 1. Attach `evidence/assessment-notes.md` and `evidence/modernization-brief.md` to Copilot Chat, and enter:
 
     ```prompt
-    Complete the Caldova Java modernization brief from the verified assessment
-    notes and template. Include the top three blockers; the completed bounded
-    change and validation; an AKS deployment pattern with identity, secrets,
-    scaling, observability, and rollback controls; an Azure Database for PostgreSQL
-    modernization direction; one bounded AI-readiness next step; dependencies;
-    customer value; success measures; and the next modernization wave. Distinguish
-    AKS Automatic from AKS Standard based on documented requirements. Do not invent
-    workload facts, timelines, savings, or service-level objectives. Label missing
-    customer information as discovery questions.
+    Complete the Caldova Java and Oracle modernization brief from the verified
+    assessment notes and template. Include the top three blockers; the completed
+    Java configuration change and validation; the Oracle compatibility findings,
+    validated PostgreSQL translation, and remaining migration gates; an AKS
+    deployment pattern with identity, secrets, scaling, observability, and rollback
+    controls; an Azure Database for PostgreSQL modernization direction; one bounded
+    AI-readiness next step; dependencies; customer value; success measures; and the
+    next modernization wave. Distinguish AKS Automatic from AKS Standard based on
+    documented requirements. Do not invent workload facts, timelines, savings, or
+    service-level objectives. Label missing customer information as discovery
+    questions.
     ```
 
 1. Review the draft against the evidence, remove unsupported claims, and save `evidence/modernization-brief.md` by pressing **Ctrl+S**.
 1. Confirm that the brief contains all five deliverables:
 
     - The top three modernization blockers.
-    - One completed or reviewed Java, PostgreSQL, container, or AKS improvement.
+    - The completed Java improvement and validated Oracle-to-PostgreSQL translation.
     - A recommended AKS deployment pattern and key operational controls.
-    - A recommended PostgreSQL modernization and AI-readiness next step.
+    - A recommended Oracle migration, PostgreSQL modernization, and AI-readiness next step.
     - A business-value statement and next modernization wave.
 
 ## Summary
 
-In this exercise, you used GitHub Copilot to assess a Java and PostgreSQL workload, externalize its database configuration, validate its core transaction path, review an AKS deployment pattern, and prepare an evidence-based customer recommendation.
+In this exercise, you used GitHub Copilot to assess Java and Oracle applications, externalize the Java application's database configuration, validate an Oracle-to-PostgreSQL translation and the core transaction path, review an AKS deployment pattern, and prepare an evidence-based customer recommendation.
 
 You have successfully completed this exercise.
 
@@ -471,3 +547,5 @@ Remove the local PostgreSQL environment and any optional AKS workload after you 
 - [Allow extensions in Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/extensions/how-to-allow-extensions)
 - [Vector search in Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/extensions/how-to-use-pgvector)
 - [Read replicas in Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/read-replica/concepts-read-replicas)
+- [Oracle to Azure Database for PostgreSQL schema conversion](https://learn.microsoft.com/azure/postgresql/migrate/oracle-conversions-schema/schema-conversions-overview)
+- [Oracle schema conversion best practices](https://learn.microsoft.com/azure/postgresql/migrate/oracle-conversions-schema/schema-conversions-best-practices)

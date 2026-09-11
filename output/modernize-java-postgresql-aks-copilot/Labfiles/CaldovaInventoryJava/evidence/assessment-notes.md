@@ -9,6 +9,7 @@
 | Java and framework | _Record the Java and Spring Boot versions._ | _Record the file._ |
 | Database configuration | _Record where the connection settings are defined._ | _Record the file._ |
 | Database access | _Record how reads and writes occur._ | _Record the file._ |
+| Oracle application | _Record the source schema objects and PL/SQL entry point._ | _Record the files._ |
 | Container and AKS | _Record the image and Kubernetes assumptions._ | _Record the files._ |
 
 ## Prioritized modernization findings
@@ -29,6 +30,22 @@
 | Health endpoint responds | _Pass or fail_ | _Record the response._ |
 | Inventory read succeeds | _Pass or fail_ | _Record returned rows._ |
 | Inventory write succeeds | _Pass or fail_ | _Record the created item._ |
+
+## Oracle application conversion
+
+| Source construct or behavior | PostgreSQL mapping | Classification | Validation evidence or remaining gap |
+| --- | --- | --- | --- |
+| Table, constraints, and data types | _Record the target mapping._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Sequence and insert trigger | _Record the target mapping._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Package and function | _Record the target mapping._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Date and time behavior | _Record the target mapping._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Null, missing-row, and case behavior | _Record the target mapping._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Transaction ownership | _Record where commits occur after migration._ | _Direct, redesign, or validation required_ | _Evidence or gap._ |
+| Executable translation check | _Record the three function results._ | _Pass or fail_ | _Evidence or gap._ |
+
+### Oracle migration discovery questions
+
+- _Record unknowns about the Oracle version, schema size, unsupported objects, character set, large objects, database links, scheduler jobs, workload profile, outage tolerance, and reconciliation requirements._
 
 ## PostgreSQL and AI-readiness checkpoint
 
@@ -53,4 +70,4 @@
 
 ## Assumptions and discovery questions
 
-- _Record facts that require customer validation, such as service-level objectives, traffic patterns, database size, recovery targets, network restrictions, or downtime tolerance._
+- _Record facts that require customer validation, such as service-level objectives, traffic patterns, Oracle and PostgreSQL database sizes, recovery targets, network restrictions, or downtime tolerance._

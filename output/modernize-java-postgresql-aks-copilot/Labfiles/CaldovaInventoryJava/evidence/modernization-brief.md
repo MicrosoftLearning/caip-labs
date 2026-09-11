@@ -1,8 +1,8 @@
-# Caldova Java modernization brief
+# Caldova Java and Oracle modernization brief
 
 ## Executive recommendation
 
-_Summarize the recommended AKS and PostgreSQL target pattern, migration direction, and intended business outcome._
+_Summarize the recommended AKS and PostgreSQL target pattern, Oracle migration direction, and intended business outcome._
 
 ## Top three blockers
 
@@ -13,6 +13,14 @@ _Summarize the recommended AKS and PostgreSQL target pattern, migration directio
 ## Completed bounded improvement
 
 _Describe the configuration change, why it matters, and the package and smoke-test evidence._
+
+## Oracle application migration recommendation
+
+- **Source scope:** _Summarize the assessed Oracle tables, constraints, sequence, trigger, package, and function._
+- **Conversion decisions:** _Describe direct mappings, redesigns, and behavior that requires validation._
+- **Validated translation:** _Record the PostgreSQL execution and representative function results._
+- **Migration gates:** _Define live discovery, unsupported-object review, schema conversion, data movement, reconciliation, performance, security, cutover, and rollback checks._
+- **Dependencies and discovery questions:** _List unresolved Oracle version, size, feature, workload, and outage requirements._
 
 ## AKS deployment recommendation
 
@@ -33,9 +41,10 @@ _Describe the configuration change, why it matters, and the package and smoke-te
 
 ## Migration sequence
 
-1. _Assess compatibility, dependencies, traffic, performance, security, and recovery requirements._
-1. _Prepare the application image, AKS platform, PostgreSQL target, networking, and identities._
-1. _Rehearse data migration and deployment, then validate functional and nonfunctional requirements._
+1. _Discover the live Oracle estate and assess compatibility, dependencies, traffic, performance, security, and recovery requirements._
+1. _Prepare the application image, AKS platform, PostgreSQL target and scratch database, networking, and identities._
+1. _Convert and independently validate Oracle objects, move representative data, and resolve review tasks._
+1. _Rehearse data migration and application deployment, then reconcile functional and nonfunctional results._
 1. _Cut over with monitoring and an agreed rollback trigger._
 
 **Rollback trigger:** _Define a measurable trigger and recovery direction._

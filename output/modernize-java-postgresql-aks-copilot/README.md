@@ -1,21 +1,22 @@
-# Modernize Java and PostgreSQL for AKS with GitHub Copilot
+# Lab 2: Modernize a Java application and an Oracle application with GitHub Copilot, PostgreSQL, and AKS
 
-This 45-minute lab uses the fictional Caldova inventory application to show how GitHub Copilot supports a bounded Java and PostgreSQL modernization assessment for Azure Kubernetes Service (AKS).
+This 60-minute lab uses the fictional Caldova inventory and replenishment applications to show how GitHub Copilot supports a bounded Java and Oracle modernization assessment for PostgreSQL and Azure Kubernetes Service (AKS).
 
-Learners inspect a Spring Boot application backed by PostgreSQL, identify modernization blockers, externalize database configuration, validate read and write behavior, review an AKS deployment pattern, and prepare a customer-ready recommendation.
+Learners inspect a Spring Boot application and extracted Oracle DDL and PL/SQL, identify modernization blockers, externalize database configuration, validate an Oracle-to-PostgreSQL translation and application behavior, review an AKS deployment pattern, and prepare a customer-ready recommendation.
 
 ## Lab structure
 
 | Exercise | Focus | Duration |
 | --- | --- | ---: |
-| [Modernize a Java and PostgreSQL workload for AKS with GitHub Copilot](Instructions/Exercises/01-modernize-java-postgresql-aks-copilot.md) | Assessment, bounded improvement, database validation, AKS review, and recommendation | 45 minutes |
+| [Lab 2: Modernize a Java application and an Oracle application with GitHub Copilot, PostgreSQL, and AKS](Instructions/Exercises/01-modernize-java-postgresql-aks-copilot.md) | Java and Oracle assessment, bounded improvement, Oracle schema translation, PostgreSQL validation, AKS review, and recommendation | 60 minutes |
 
 ## Lab files
 
 - `Labfiles/CaldovaInventoryJava` contains the starter Spring Boot application and local PostgreSQL environment.
+- `Labfiles/CaldovaInventoryJava/oracle-application` contains extracted Oracle DDL and PL/SQL source artifacts.
 - `Labfiles/CaldovaInventoryJava/k8s` contains the prepared AKS workload manifests.
 - `Labfiles/CaldovaInventoryJava/evidence` contains assessment and modernization brief templates.
-- `Labfiles/CaldovaInventoryJava/solution` contains a reference file for the bounded improvement.
+- `Labfiles/CaldovaInventoryJava/solution` contains reference files for the bounded Java improvement and Oracle-to-PostgreSQL translation.
 
 ## Source documentation
 
@@ -26,3 +27,5 @@ Learners inspect a Spring Boot application backed by PostgreSQL, identify modern
 - [Scaling options in AKS](https://learn.microsoft.com/azure/aks/concepts-scale)
 - [Vector search in Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/extensions/how-to-use-pgvector)
 - [Read replicas in Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/read-replica/concepts-read-replicas)
+- [Oracle to Azure Database for PostgreSQL schema conversion](https://learn.microsoft.com/azure/postgresql/migrate/oracle-conversions-schema/schema-conversions-overview)
+- [Oracle schema conversion best practices](https://learn.microsoft.com/azure/postgresql/migrate/oracle-conversions-schema/schema-conversions-best-practices)
