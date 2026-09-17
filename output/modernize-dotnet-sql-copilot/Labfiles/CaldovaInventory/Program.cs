@@ -41,4 +41,4 @@ app.MapPost("/inventory", async (
     return Results.Created($"/inventory/{created.Id}", created);
 });
 
-app.Run("http://localhost:5050");
+app.Run();

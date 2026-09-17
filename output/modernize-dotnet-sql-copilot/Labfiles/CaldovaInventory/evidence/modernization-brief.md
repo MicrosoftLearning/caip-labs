@@ -1,8 +1,8 @@
-# Caldova modernization brief
+# Caldova migration outcome
 
-## Executive recommendation
+## Executive outcome
 
-_Summarize the recommended application runtime, SQL target, migration direction, and intended business outcome._
+_Summarize the implemented Azure Container Apps and Azure SQL Database targets, validation result, and intended business outcome._
 
 ## Top three blockers
 
@@ -10,38 +10,29 @@ _Summarize the recommended application runtime, SQL target, migration direction,
 1. _Blocker, evidence, and impact._
 1. _Blocker, evidence, and impact._
 
-## Completed bounded improvement
+## Completed changes
 
-_Describe the configuration change, why it matters, and the build and smoke-test evidence._
+_Describe the configuration, URL binding, containerization, database migration, and deployment changes._
 
-## Application runtime decision
+## Deployed resources and evidence
 
-- **Recommended target:** _Azure App Service, Azure Container Apps, or Azure Kubernetes Service._
-- **Why it fits:** _Connect verified workload needs to service capabilities._
-- **Why not the alternatives:** _Explain why each alternative isn't the first choice for this wave._
-- **Dependencies and discovery questions:** _List unresolved requirements._
+- **Application target:** _Record the Container Apps environment, app, revision, image, and public URL._
+- **Database target:** _Record the Azure SQL logical server and database without recording credentials._
+- **Validation:** _Record build, deployment, health, read, and write results._
+- **Issues:** _Record deployment issues and how you resolved them._
 
-## SQL Server modernization decision
+## Security, reliability, and operations gaps
 
-- **Recommended target:** _Azure SQL Database, Azure SQL Managed Instance, or SQL Server on Azure Virtual Machines._
-- **Migration direction:** _Rehost or refactor, followed by an assessment and migration method._
-- **Why it fits:** _Connect verified SQL dependencies to target capabilities._
-- **Why not the alternatives:** _Explain why each alternative isn't the first choice for this wave._
-- **Compatibility and sizing gates:** _List required assessment evidence._
-
-## Security, reliability, and operations
-
-_Describe identity, secret management, network access, availability, observability, backup, and recovery improvements._
+_Describe the temporary public firewall and SQL authentication choices. Identify required production improvements for identity, private networking, scaling, observability, availability, backup, and recovery._
 
 ## Migration sequence and rollback
 
-1. _Assess compatibility, dependencies, size, performance, and downtime tolerance._
-1. _Prepare the application and target environment._
-1. _Rehearse migration and validate functional and nonfunctional requirements._
-1. _Cut over with monitoring and an agreed rollback trigger._
+1. _Summarize the migration sequence that you completed._
+1. _Identify validation gates required before production cutover._
+1. _Define how to return traffic to the existing application and database._
 
 **Rollback trigger:** _Define a measurable trigger and recovery direction._
 
 ## Business value and next wave
 
-_State the customer value in measurable terms where evidence exists, avoid unsupported savings claims, and define the next modernization wave._
+_State the demonstrated customer value without unsupported savings claims. Define the next production-hardening wave and unresolved discovery questions._
