@@ -1,14 +1,14 @@
 # Introduction to resilient cloud design
 
-This 20-minute, portal-based lab introduces resilient cloud design through the fictional Caldova inventory application.
+This 30-minute, portal-based lab introduces resilient cloud design through Caldova's regulated pharmaceutical manufacturing scenario.
 
-Learners explore availability-zone posture, compare Azure Storage redundancy options, apply the shared responsibility model, navigate Infrastructure Resiliency Manager, and distinguish resource-level posture from application-level posture. The lab is read-only and creates no Azure resources.
+Learners translate recovery requirements into an Azure VM backup design, create a Recovery Services vault and retention policy, protect an instructor-provisioned VM, validate a recovery point, and distinguish successful backup from proven application recovery.
 
 ## Lab structure
 
 | Exercise | Focus | Duration |
 | --- | --- | ---: |
-| [Lab 1 - L100: Introduction to resilient cloud design](Instructions/Exercises/01-introduction-to-resilient-cloud-design.md) | Availability zones, shared responsibility, storage redundancy, IRM navigation, and customer resilience journeys | 20 minutes |
+| [Lab 1 - L100: Introduction to resilient cloud design](Instructions/Exercises/01-introduction-to-resilient-cloud-design.md) | Recovery objectives, shared responsibility, VM backup, retention, recovery-point validation, and residual-risk assessment | 30 minutes |
 
 ## Lab environment
 
@@ -16,17 +16,20 @@ This portal-based lab requires an instructor-provisioned Azure environment. It d
 
 The prepared environment contains:
 
-- Resources with a mix of zone-resilient, non-zone-resilient, and not-evaluated states.
-- A prepared service group named `CaldovaInventory` that represents the inventory application.
-- An empty service group named `CaldovaDayZero` for later workshop activities.
-- Reader and Service Group Reader access for inspection-only tasks.
-- An enrolled Infrastructure Resiliency Manager usage plan.
+- An Azure VM with the Azure VM agent installed and running.
+- Contributor access to the lab resource group.
+- Permission to create a Recovery Services vault and backup policy.
+- The `Microsoft.RecoveryServices` resource provider registered in the subscription.
+- Synthetic lab data only. No regulated or customer data is used.
+
+## Workshop alignment
+
+This exercise is Lab 1 in the **Operate with confidence and trust** workshop. It introduces the Start Resilient lifecycle and prepares learners for later labs that assess posture with Infrastructure Resiliency Manager and Azure Advisor, protect additional Azure data, harden recovery data, and evaluate cyber-recovery readiness.
 
 ## Source documentation
 
-- [What are Azure availability zones?](/azure/reliability/availability-zones-overview)
-- [Infrastructure Resiliency Manager overview](/azure/resiliency/infrastructure-resiliency-manager-overview)
-- [Resiliency goals and recommendations](/azure/resiliency/goals-recommendations-about)
-- [Azure Storage redundancy](/azure/storage/common/storage-redundancy)
+- [Azure Backup architecture and components](/azure/backup/backup-architecture)
+- [Back up Azure VMs in a Recovery Services vault](/azure/backup/backup-azure-arm-vms-prepare)
 - [Reliability in the Azure Well-Architected Framework](/azure/well-architected/reliability/)
-- [Original Azure resiliency workshop](https://github.com/Azure/ResiliencyInAzure/blob/main/Labs/IRM_Lab.md)
+- [Sovereign Landing Zone overview](https://github.com/Azure/sovereign-landing-zone/blob/main/docs/01-Overview.md)
+- [Original Azure data resiliency and cyber recovery workshop](https://github.com/Azure/ResiliencyInAzure/blob/main/Labs/DataResiliencyAndCyberRecoveryLab.md)

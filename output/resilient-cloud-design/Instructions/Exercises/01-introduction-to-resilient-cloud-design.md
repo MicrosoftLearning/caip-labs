@@ -1,209 +1,237 @@
 ---
 lab:
     title: 'Lab 1 - L100: Introduction to resilient cloud design'
-    description: 'Explore Azure availability zones, compare storage redundancy options, and use Infrastructure Resiliency Manager to examine the foundations of a resilient cloud design.'
+    description: 'Design and validate Azure VM backup for a regulated Caldova workload by configuring retention, protecting a virtual machine, and verifying a recovery point.'
     level: 100
-    duration: 20
+    duration: 30
     islab: true
     primarytopics:
         - Azure reliability
-        - Azure availability zones
-        - Infrastructure Resiliency Manager
-        - Azure Storage redundancy
+        - Azure Backup
+        - Azure Virtual Machines
+        - Recovery Services vault
+        - Recovery objectives
         - Shared responsibility
 ---
 
 # Lab 1 - L100: Introduction to resilient cloud design
 
-Caldova operates business-critical inventory and replenishment applications on Azure. An interruption to the application or its data can delay warehouse operations, affect order fulfillment, and reduce confidence in inventory records. Caldova wants its teams to make reliability an explicit design requirement instead of treating recovery as a response to an outage.
+Caldova is a pharmaceutical company preparing to launch an accelerated V2 product while closing a 7% production gap across three manufacturing plants. Its supply chain planning application runs on legacy .NET, its manufacturing databases remain on-premises, and its broader application estate runs on VMware that is past renewal. Caldova must modernize without disrupting manufacturing, weakening regulated controls, or putting the product launch at risk.
 
-In this exercise, you explore the Azure capabilities that support resilient cloud design. You examine availability-zone posture, compare storage redundancy options, apply the shared responsibility model, and navigate Infrastructure Resiliency Manager (IRM). This lab is inspection-only. You don't create or change Azure resources.
+In this exercise, you begin Caldova's **Start Resilient** journey by translating business requirements into an Azure virtual machine (VM) backup design. You create a Recovery Services vault, configure a retention policy, protect an instructor-provisioned VM that represents the Supply Chain Planning Portal, and verify that Azure Backup produces a validated recovery point. You then assess what the backup design proves and which application-level risks remain.
 
-This exercise should take approximately **20** minutes to complete.
-
-> [!NOTE]
-> Infrastructure Resiliency Manager is in preview. Portal labels, available features, and evaluation results can change.
+This exercise should take approximately **30** minutes to complete. The initial backup can continue beyond the exercise time.
 
 ## Prerequisites
 
 To complete this exercise, you need:
 
-- An Azure subscription with access to the instructor-provisioned Caldova environment.
-- **Reader** access to the prepared resources and service groups.
-- **Service Group Reader** access to view application-level resiliency posture.
-- An IRM usage plan enrolled for the prepared service groups.
+- An Azure subscription with Contributor access to the instructor-provisioned lab resource group.
+- Permission to create a Recovery Services vault and an Azure VM backup policy.
+- The `Microsoft.RecoveryServices` resource provider registered in the subscription.
+- An instructor-provisioned Azure VM with the Azure VM agent installed and running.
 - Access to the [Azure portal](https://portal.azure.com/).
 
-The instructor-provisioned environment includes these service groups:
+> [!IMPORTANT]
+> Use only synthetic lab data. Caldova's production GxP batch and quality records must remain in the United Kingdom and require validated access, encryption, policy, and audit controls. Don't place regulated or customer data in the lab VM.
 
-| Service group | Purpose |
-| --- | --- |
-| `CaldovaDayZero` | An empty service group reserved for a later design activity. |
-| `CaldovaInventory` | A prepared service group that represents Caldova's inventory application. |
-
-> [!NOTE]
-> If your instructor provides different service-group names, record them and use those names throughout the exercise.
+Record the values that your instructor provides:
 
 | Setting | Value |
 | --- | --- |
 | Subscription |  |
-| Prepared resource group |  |
-| Day-zero service group | `CaldovaDayZero` |
-| Inventory service group | `CaldovaInventory` |
+| Resource group |  |
+| Azure region |  |
+| VM name |  |
+| Unique identifier |  |
 
-## Explore availability-zone resilience
+## Assess Caldova's recovery requirements
 
-Start with the Azure resiliency overview. It shows how Azure classifies individual resources based on their detected zonal configuration.
+Caldova needs business-aligned recovery objectives rather than a backup schedule chosen in isolation. Review the customer requirements and identify where VM backup contributes to resilience and where additional controls are necessary.
 
-### Review the resiliency overview
+1. Review Caldova's current operating context:
 
-1. Open the [Azure portal](https://portal.azure.com/), and sign in with the account assigned to the lab subscription.
-1. Enter **Resiliency** in the search box, and then select **Resiliency**.
-1. Expand **Infrastructure Resiliency** in the left menu, and then select **Overview**.
-1. Review the resource summary and identify the counts for these posture categories:
-
-    | Posture | Meaning |
+    | Requirement or constraint | Business significance |
     | --- | --- |
-    | **Zone resilient** | IRM detects an Azure-recommended zonal resiliency solution. |
-    | **Non-zone resilient** | IRM doesn't detect a zonal resiliency solution. |
-    | **Not evaluated** | IRM can't evaluate the resource type or configuration. |
+    | Supply Chain Planning Portal: five-minute continuity target and 500 requests per second | Planning must continue during peak demand. |
+    | MES and batch execution: continuous availability | Production runs 24 hours a day. |
+    | `BatchManufacturingCore`: maximum 30-minute data-loss tolerance | In-process electronic batch records can't be lost mid-run. |
+    | `BatchManufacturingCore` and `QualityLIMS`: UK residency | GxP batch and quality records must remain in the United Kingdom. |
+    | No direct internet access from datacenter servers | Protection and monitoring designs must work through approved network paths. |
+    | Limited ExpressRoute bandwidth and controlled firewall changes | Transfer time and operational lead time affect recovery planning. |
 
-1. Record the category with the largest resource count in the prepared environment.
-1. Select **Resource Resiliency**, and confirm that individual resources appear with a resiliency status.
+1. Open the instructor-provisioned VM in the Azure portal.
+1. Record its **Location**, **Resource group**, operating system, disk count, and current backup status.
+1. Select **Settings** > **Extensions + applications**, and confirm that the Azure VM agent is available.
+1. Record the workload represented by the VM and the business process it supports.
+1. Identify which Caldova requirement VM backup can help address and which requirements need availability, database protection, disaster recovery, or cyber-recovery controls in addition to backup.
 
-You should now see how IRM summarizes the zonal posture of resources across the selected Azure scope.
+> [!NOTE]
+> A recovery time objective (RTO) is the maximum acceptable interruption. A recovery point objective (RPO) is the maximum acceptable data loss measured in time. A daily VM backup doesn't, by itself, meet a five-minute continuity target or a 30-minute database RPO.
 
-### Apply the shared responsibility model
+## Design the VM backup solution
 
-Azure provides regions, availability zones, and zone-redundant service options. Caldova remains responsible for selecting supported regions and service tiers, configuring resources to use those capabilities, and validating that the complete application meets its reliability requirements.
+Use a simple lab policy to learn the protection workflow. Evaluate the policy against Caldova's requirements instead of treating it as a complete production design.
 
-1. In **Resource Resiliency**, select a resource marked **Zone resilient**.
-1. Review the detected resiliency solution and identify the configuration that supports the status.
-1. Return to the resource list, and select a resource marked **Non-zone resilient**.
-1. Select **View Recommendation**, and review the suggested configuration change.
-1. Record which party owns each responsibility:
+### Define the protection decisions
+
+1. Use these decisions for the lab:
+
+    | Design decision | Lab value | Reason |
+    | --- | --- | --- |
+    | Vault region | Same region as the VM | A Recovery Services vault protects VMs in its region. |
+    | Vault redundancy | Geo-redundant storage (GRS) | Adds a copy in the paired Azure region. |
+    | Backup frequency | Daily | Provides a simple introductory schedule. |
+    | Daily retention | 30 days | Provides a month of daily recovery points. |
+    | Instant Restore retention | Two days | Retains snapshots for faster short-term restore. |
+
+1. Confirm that the selected Azure region and its paired region comply with the lab's data-location requirements.
+1. Compare the daily schedule with the Supply Chain Planning Portal continuity target.
+1. Record why backup is necessary but insufficient for application availability.
+1. Record the additional design decisions required before Caldova uses this pattern for a regulated production workload, including workload-consistent protection, restore testing, encryption, access control, audit evidence, and database-specific recovery.
+
+### Apply shared responsibility
+
+Azure operates the backup service and the physical platform. Caldova remains responsible for choosing policies, assigning access, protecting application dependencies, testing restores, and proving that recovery meets business and regulatory requirements.
+
+1. Assign an owner to each responsibility:
 
     | Responsibility | Azure or Caldova |
     | --- | --- |
-    | Operate the physical datacenters that form an availability zone. |  |
-    | Choose a region and service tier that support the required design. |  |
-    | Configure workload resources for zone redundancy. |  |
-    | Test whether the application continues to meet business requirements during a failure. |  |
+    | Operate the physical infrastructure used by Azure Backup. |  |
+    | Choose the backup frequency and retention period. |  |
+    | Confirm that the application and database recover consistently. |  |
+    | Test restore procedures and collect recovery evidence. |  |
+    | Maintain workload access, network paths, and operational runbooks. |  |
 
-1. Confirm that Azure owns operation of the platform, while Caldova owns workload configuration and validation.
+1. Confirm that Azure owns operation of the service and Caldova owns workload configuration and recovery validation.
 
-> [!IMPORTANT]
-> A **Zone resilient** resource status doesn't prove that the complete application is resilient. Application dependencies, data services, networking, monitoring, and recovery procedures must also support the intended outcome.
+## Create the Recovery Services vault
 
-### Compare storage redundancy options
+The Recovery Services vault stores recovery points and manages the VM backup policy. Configure its storage redundancy before you protect the VM because the option becomes restricted after the vault contains protected items.
 
-Use the storage account creation experience to compare redundancy choices without deploying a resource.
+1. In the Azure portal, enter **Resiliency** in the search box, and then select **Resiliency**.
+1. On the **Vault** pane, select **+ Vault**.
+1. Select **Recovery Services vault**, and then select **Continue**.
+1. Enter the following values:
 
-1. In the Azure portal, select **Create a resource**.
-1. Search for and select **Storage account**, and then select **Create**.
-1. On the **Basics** tab, choose the lab subscription, resource group, and region only when the portal requires them to display the available **Redundancy** options.
-1. Open the **Redundancy** list, and compare the options available for the selected region and account configuration:
-
-    | Option | Protection scope |
+    | Setting | Value |
     | --- | --- |
-    | Locally redundant storage (LRS) | Replicates data within one physical location in the primary region. |
-    | Zone-redundant storage (ZRS) | Replicates data synchronously across availability zones in the primary region. |
-    | Geo-redundant storage (GRS) | Adds asynchronous replication to a secondary region. |
-    | Geo-zone-redundant storage (GZRS) | Combines zonal replication in the primary region with replication to a secondary region. |
+    | **Subscription** | *{lab subscription}* |
+    | **Resource group** | *{lab resource group}* |
+    | **Vault name** | `rsv-caldova-<unique-id>-<region>` |
+    | **Region** | *{same region as the VM}* |
 
-1. Choose the option that best addresses a datacenter-level failure within one region, and record your reason.
-1. Choose the option that adds protection from a regional disruption, and record one recovery consideration.
-1. Select **Cancel**, and confirm that you don't create the storage account.
+1. Select **Review + create**, and then select **Create**.
+1. Open the deployed vault, and then select **Settings** > **Properties**.
+1. Under **Backup Configuration**, select **Update**, select **Geo-redundant**, and then select **Save**.
 
-You have compared local, zonal, and regional redundancy choices without changing the lab environment.
+Confirm that **Backup Configuration** displays **Geo-redundant** before you continue.
 
-## Navigate Infrastructure Resiliency Manager
+> [!NOTE]
+> Geo-redundant vault storage doesn't automatically make the application available in another region. Cross-region recovery also depends on supported vault settings, replicated application dependencies, networking, identity, capacity, and a tested recovery plan.
 
-IRM organizes resource posture, application goals, recommendations, recovery plans, and drills in one experience. Explore the available views and connect them to Caldova's reliability lifecycle.
+## Configure the VM backup policy
 
-### Explore the IRM views
+Create a policy that implements the lab's backup frequency and retention decisions.
 
-1. Return to **Resiliency** > **Infrastructure Resiliency** in the Azure portal.
-1. Review the available menu items:
-
-    | View | Purpose |
-    | --- | --- |
-    | **Overview** | Summarizes resiliency posture across the Azure estate. |
-    | **Resource Resiliency** | Shows detected posture for individual resources. |
-    | **Service Group Resiliency** | Evaluates application resources against a shared resiliency goal. |
-    | **Recommendations** | Provides guidance for detected resiliency gaps. |
-    | **Recovery Plans** | Defines ordered recovery actions for an application. |
-    | **Drills** | Supports controlled resilience validation. |
-    | **Usage Plans** | Associates IRM usage with a billing subscription. |
-
-1. Select **Service Group Resiliency**.
-1. Identify the posture categories shown for service groups, such as **Zone resilient**, **Non-zone resilient**, **Goals not assigned**, and **Not evaluated**.
-1. Confirm that `CaldovaDayZero` and `CaldovaInventory`, or the instructor-provided equivalents, appear in the list.
+1. In the Recovery Services vault, select **Manage** > **Backup policies**.
+1. Select **+ Add**, and then select **Azure Virtual Machine**.
+1. Enter `bp-caldova-vm-daily-30d` for **Policy name**.
+1. Set **Policy subtype** to **Standard** and **Backup frequency** to **Daily**. Choose a time that doesn't overlap with other lab operations.
+1. Retain the daily recovery point for **30 days**.
+1. Set **Instant Restore** snapshot retention to **2 days**.
+1. Select **Create**, and confirm that the policy appears in the policy list.
 
 > [!TIP]
-> If a menu item isn't available, record the difference. Preview availability can depend on tenant enrollment, permissions, region, and the configured usage plan.
+> A production workload that needs recovery points more often than once each day might require an Enhanced policy or workload-specific protection. Validate service support, cost, and application consistency before choosing a policy.
 
-### Examine the Caldova application boundary
+## Protect and validate the VM
 
-A service group represents an application boundary rather than a single Azure resource. This view helps Caldova reason about the inventory application as a set of interdependent components.
+Apply the policy, start an on-demand backup, and inspect each phase of the backup job. A successful configuration isn't enough. Recovery readiness requires a completed, validated recovery point and a tested restore procedure.
 
-1. Open `CaldovaInventory`.
-1. Review the service-group goal, overall posture, and member resources without changing any settings.
-1. Select one member resource, and compare its individual status with the service group's overall status.
-1. Record your observations:
+### Enable VM protection
 
-    | Question | Observation |
+1. Return to **Resiliency**, and then select **+ Configure protection**.
+1. Set **Resources managed by** to **Azure**, **Datasource type** to **Azure Virtual machines**, and **Solution** to **Azure Backup**. Then select **Continue**.
+1. Select the Recovery Services vault, select **Continue**, and assign `bp-caldova-vm-daily-30d`.
+1. Under **Virtual Machines**, select **Add**, select the instructor-provisioned VM, and then select **OK**.
+1. Select **Enable backup**, and wait for the configuration operation to complete.
+1. Select **Protected items** in **Resiliency**, filter **Datasource type** to **Azure Virtual machines**, and confirm that the VM appears with protection enabled.
+
+### Create and monitor a recovery point
+
+1. Open the protected VM in the vault.
+1. Select **Backup now**.
+1. Choose the default retention date for the on-demand recovery point, and then select **OK**.
+1. Select **Jobs** in **Resiliency**, and open the VM backup job.
+1. Monitor or record the status of these phases:
+
+    | Phase | Expected result |
     | --- | --- |
-    | What resiliency goal is assigned? |  |
-    | Which member resources meet the goal? |  |
-    | Which member resources don't meet the goal? |  |
-    | Are any resources not evaluated? |  |
-    | Which dependency presents the clearest business risk? |  |
+    | Snapshot | Azure Backup captures the VM disks for Instant Restore. |
+    | Transfer data to vault | Azure Backup transfers backup data for vault retention. |
+    | Validate backup | Azure Backup verifies the recovery point. |
 
-1. Explain why one non-zone-resilient dependency can prevent the complete application from meeting a zone-resilient goal.
-1. Return to the service-group list, and open `CaldovaDayZero`.
-1. Confirm that the service group has no configured application members or goal. Don't add resources or assign a goal.
+1. After the job succeeds, return to the protected VM and select **Recovery points**.
+1. Confirm that the new recovery point appears with its date, time, and consistency type.
 
-You should now be able to distinguish resource-level posture from application-level posture and identify where later design and remediation work begins.
+> [!IMPORTANT]
+> The initial backup can take longer than the exercise, depending on VM size and data churn. If it remains in progress, record the job ID and current phase. A completed transfer alone doesn't prove recovery readiness. Continue validation after **Validate backup** succeeds.
 
-## Connect resilience capabilities to Caldova's journey
+## Evaluate recovery readiness
 
-Finish by mapping the IRM capabilities to the stages Caldova uses to improve and maintain reliability.
+Connect the technical result to Caldova's business and regulatory requirements. This review prevents a green backup status from being mistaken for complete workload resilience.
 
-1. Match each customer moment to the relevant activity:
+1. Record the evidence produced by the lab:
 
-    | Customer moment | Activity |
+    | Evidence | Observation |
     | --- | --- |
-    | Start resilient | Define reliability requirements and choose resilient configurations before deployment. |
-    | Get resilient | Assess an existing application, identify gaps, and plan remediation. |
-    | Stay resilient | Monitor for drift, test recovery, and maintain evidence of readiness. |
+    | Vault region and redundancy |  |
+    | Applied policy and retention |  |
+    | Protected VM |  |
+    | Backup job ID and final status |  |
+    | Recovery point time and consistency type |  |
 
-1. Classify the following Caldova actions as **Start resilient**, **Get resilient**, or **Stay resilient**:
+1. Determine whether the policy meets the Supply Chain Planning Portal's five-minute continuity target.
+1. Explain why the VM recovery point doesn't prove that `BatchManufacturingCore` can meet its 30-minute data-loss tolerance.
+1. Identify the evidence Caldova still needs before production approval, such as an isolated restore test, application validation, database consistency checks, measured recovery time, audit records, and an approved runbook.
+1. Recommend one next control for each gap:
 
-    - Select ZRS for a new inventory data store before deployment.
-    - Review recommendations for an existing non-zone-resilient database.
-    - Run an approved zone-down drill against a prepared application.
-    - Detect that a resource no longer meets its assigned resiliency goal.
+    | Gap | Example next control |
+    | --- | --- |
+    | Application availability during a VM or zone failure | Use a redundant application architecture and test failover. |
+    | Database recovery within the required RPO | Use database-aware backup or replication with validated recovery objectives. |
+    | Regional disruption | Design and test a regional disaster-recovery path. |
+    | Ransomware or compromised credentials | Protect recovery data with immutability, least privilege, and cyber-recovery validation. |
+    | UK residency and regulatory evidence | Validate data locations and retain auditable policy and recovery evidence. |
 
-1. Record one business requirement that Caldova must define before choosing a technical design, such as an acceptable outage duration or data-loss limit.
-1. Record one question that requires application-level evidence rather than the status of a single resource.
-
-The mapping connects Azure platform capabilities to an ongoing reliability practice rather than a one-time configuration task.
+1. Summarize whether the VM is **backed up**, **restorable**, and **proven to meet the business requirement**. Treat these as three separate conclusions.
 
 ## Summary
 
-In this exercise, you explored availability-zone posture, applied the shared responsibility model, compared Azure Storage redundancy options, and navigated the core IRM views. You also examined Caldova's inventory application as a service group and connected resilience work to the start, get, and stay resilient journey.
+In this exercise, you translated Caldova's business constraints into an introductory VM backup design. You created a geo-redundant Recovery Services vault, configured a daily retention policy, protected an Azure VM, and inspected a validated recovery point. You also identified the application availability, database recovery, regional recovery, cyber-recovery, and compliance evidence that backup alone doesn't provide.
 
 You have successfully completed this exercise.
 
 ## Clean up
 
-This inspection-only exercise doesn't create or change Azure resources. Confirm that you canceled the storage account creation page and didn't change either prepared service group. No further cleanup is required.
+Remove only the backup resources that you created. Don't delete the instructor-provisioned VM or resource group.
+
+1. Open `rsv-caldova-<unique-id>-<region>`.
+1. Select **Protected items** > **Backup items** > **Azure Virtual Machine**, and then open the protected VM.
+1. Select **Stop backup**, select **Delete backup data**, enter the requested confirmation, and confirm the operation.
+1. Wait for Azure Backup to remove the protected item.
+1. Delete `bp-caldova-vm-daily-30d` if Azure doesn't remove it with the vault.
+1. Delete `rsv-caldova-<unique-id>-<region>`.
+
+> [!NOTE]
+> Vault deletion can remain blocked while backup data is soft-deleted or an operation is in progress. Don't disable subscription-level safety features to accelerate lab cleanup. Record the vault name and ask the instructor to complete deletion when necessary.
 
 ## Learn more
 
-- [What are Azure availability zones?](/azure/reliability/availability-zones-overview)
-- [Infrastructure Resiliency Manager overview](/azure/resiliency/infrastructure-resiliency-manager-overview)
-- [Resiliency goals and recommendations](/azure/resiliency/goals-recommendations-about)
-- [Azure Storage redundancy](/azure/storage/common/storage-redundancy)
+- [Azure Backup architecture and components](/azure/backup/backup-architecture)
+- [Back up Azure VMs in a Recovery Services vault](/azure/backup/backup-azure-arm-vms-prepare)
+- [Azure VM backup policies](/azure/backup/backup-azure-vms-introduction#backup-and-restore-considerations)
 - [Reliability in the Azure Well-Architected Framework](/azure/well-architected/reliability/)
+- [Sovereign Landing Zone overview](https://github.com/Azure/sovereign-landing-zone/blob/main/docs/01-Overview.md)
