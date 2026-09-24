@@ -1,8 +1,8 @@
 # Assess and improve Azure infrastructure resiliency
 
-This 150-minute lab uses a fictional insurance claims application to show how Infrastructure Resiliency Manager (preview) and the Azure Copilot Resiliency Agent (preview) support zonal resiliency assessment, planning, and validation.
+This 150-minute lab uses Caldova's accelerated V2 pharmaceutical product scenario to show how Infrastructure Resiliency Manager (preview) and the Azure Copilot Resiliency Agent (preview) support zonal resiliency assessment, planning, and validation.
 
-Learners inspect resource and application posture, create a service group, assign a zonal resiliency goal, review recommendations, use the Resiliency Agent to draft remediation guidance and Bicep, and inspect a prepared Availability Zone Down Drill without executing it.
+Learners assess a representative Azure slice of Caldova's Supply Chain Planning Portal. They apply V2 launch, recovery, UK data-residency, hybrid network, and acquired-system constraints while reviewing posture, creating a service group, prioritizing recommendations, drafting remediation guidance and Bicep, and inspecting a prepared Availability Zone Down Drill without executing it.
 
 ## Lab structure
 
@@ -16,12 +16,14 @@ This portal-based lab requires an instructor-provisioned Azure environment. It d
 
 The prepared environment contains:
 
-- An Azure Kubernetes Service (AKS) cluster distributed across availability zones.
-- An Azure SQL database that isn't zone redundant.
-- A locally redundant storage account.
+- An Azure Kubernetes Service (AKS) cluster representing the Supply Chain Planning Portal and distributed across availability zones.
+- An Azure SQL planning database that isn't zone redundant.
+- A locally redundant storage account for planning artifacts.
 - An Azure Container Registry and a Standard Load Balancer.
-- A service group named `IRMDemoSG1` with a zonal resiliency goal and a prepared drill.
+- A service group named `CaldovaV2-SG` with a zonal resiliency goal and a prepared drill.
 - Access to the Azure Copilot Resiliency Agent.
+
+The resources contain synthetic data. They represent a modernization assessment and don't replace Caldova's current London and Miami datacenters, regulated manufacturing databases, segmented plant networks, or Litware PostgreSQL environment.
 
 ## Source documentation
 
