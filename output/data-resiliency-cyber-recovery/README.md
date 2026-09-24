@@ -1,8 +1,8 @@
 # Protect Azure data and recover from cyber threats
 
-This 70-minute, portal-based lab uses a fictional insurance claims application to demonstrate data resiliency and cyber recovery with Azure Backup.
+This 70-minute, portal-based lab extends Caldova's regulated pharmaceutical manufacturing scenario to data resiliency and cyber recovery with Azure Backup.
 
-Learners protect an Azure VM and Blob Storage data, verify backup configuration, enable reversible vault immutability, map recovery paths, and interpret recovery point threat detection from Microsoft Defender for Cloud.
+Learners protect an Azure VM and synthetic manufacturing data in Blob Storage, verify backup configuration, enable reversible vault immutability, map recovery paths to Caldova's continuity and regulatory requirements, and interpret recovery point threat detection from Microsoft Defender for Cloud.
 
 ## Lab structure
 
@@ -16,10 +16,15 @@ This portal-based lab requires an instructor-provisioned Azure environment. It d
 
 The prepared environment contains:
 
-- An Azure VM with the Azure VM agent installed and running.
-- An Azure storage account with at least one container and sample blobs.
+- An Azure VM that represents Caldova's Supply Chain Planning Portal, with the Azure VM agent installed and running.
+- An Azure storage account with at least one container of synthetic manufacturing documents and logs.
 - Contributor access and permission to create vaults, policies, and role assignments.
 - Defender for Servers Plan 1 or Plan 2 coverage for the VM.
+- Synthetic lab data only. No GxP, regulated, or customer data is used.
+
+## Workshop alignment
+
+This exercise is Lab 4 in the **Operate with confidence and trust** workshop. Earlier labs establish Caldova's recovery requirements and assess its reliability posture. This lab extends that work by protecting additional Azure data, hardening recovery data, and evaluating cyber-recovery readiness without treating backup status as proof that a regulated workload meets its recovery objectives.
 
 ## Source documentation
 
